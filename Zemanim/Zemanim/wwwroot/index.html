@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zmanim — Astrolabe</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Frank+Ruhl+Libre:wght@500;700;800&family=Jost:wght@300;400;500&display=swap');
+
+        :root {
+            --parchment: #F3E8CC;
+            --parchment-deep: #E3CE9F;
+            --ink: #18170F;
+            --brass: #B8893C;
+            --brass-bright: #E3B45D;
+            --maroon: #7C2D2D;
+            --sapphire: #28415F;
+            --sage: #5F6F4F;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--ink);
+            background-image: radial-gradient(circle at 50% 16%, rgba(255,255,255,0.09), transparent 55%), repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 5px), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpolygon points='30,9 38,23 22,23' fill='none' stroke='rgba(243,232,204,0.035)' stroke-width='1'/%3E%3Cpolygon points='30,51 22,37 38,37' fill='none' stroke='rgba(243,232,204,0.035)' stroke-width='1'/%3E%3C/svg%3E");
+            background-size: auto, auto, 60px 60px;
+            background-repeat: no-repeat, repeat, repeat;
+            color: var(--parchment);
+            font-family: 'Jost', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 14px 84px;
+        }
+
+        .frame-strip {
+            position: fixed;
+            left: 0;
+            right: 0;
+            height: 20px;
+            z-index: 5;
+            pointer-events: none;
+            background-color: rgba(11,10,7,0.6);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='16' viewBox='0 0 40 16'%3E%3Cpolygon points='20,3 24.3,10.5 15.7,10.5' fill='none' stroke='%23D9A94F' stroke-width='0.9'/%3E%3Cpolygon points='20,13 15.7,5.5 24.3,5.5' fill='none' stroke='%23D9A94F' stroke-width='0.9'/%3E%3Ccircle cx='4' cy='8' r='1.2' fill='%23D9A94F'/%3E%3Ccircle cx='36' cy='8' r='1.2' fill='%23D9A94F'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-position: center;
+        }
+
+            .frame-strip.top {
+                top: 0;
+                border-bottom: 1px solid rgba(217,169,79,0.45);
+                box-shadow: 0 1px 0 rgba(0,0,0,0.4);
+            }
+
+            .frame-strip.bottom {
+                bottom: 0;
+                border-top: 1px solid rgba(217,169,79,0.45);
+                box-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+            }
+
+        header {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .eyebrow {
+            font-size: 11px;
+            letter-spacing: .32em;
+            text-transform: uppercase;
+            color: var(--brass-bright);
+            margin: 0 0 10px;
+        }
+
+        .hexdivider {
+            display: block;
+            margin: 0 auto 10px;
+            opacity: .9;
+        }
+
+        h1 {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-weight: 800;
+            font-size: clamp(28px,7vw,42px);
+            margin: 0;
+            letter-spacing: .01em;
+        }
+
+        .heb-title {
+            font-family: 'Frank Ruhl Libre', serif;
+            font-weight: 700;
+            font-size: clamp(16px, 3.4vw, 21px);
+            color: var(--brass-bright);
+            margin-top: 4px;
+            letter-spacing: 0;
+        }
+
+        .date-line {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 18px;
+            color: #C9BD9C;
+            margin-top: 10px;
+        }
+
+        #zmanList {
+            list-style: none;
+            margin: 22px 0 0;
+            padding: 14px 22px;
+            width: min(94vw, 420px);
+            direction: rtl;
+            background: linear-gradient(180deg, rgba(227,180,93,0.07), rgba(227,180,93,0.015));
+            border: 1px solid rgba(227,180,93,0.3);
+            border-radius: 10px;
+        }
+
+            #zmanList li {
+                display: flex;
+                align-items: baseline;
+                justify-content: space-between;
+                gap: 14px;
+                padding: 7px 0;
+                border-bottom: 1px solid rgba(227,180,93,0.14);
+            }
+
+                #zmanList li:last-child {
+                    border-bottom: none;
+                }
+
+            #zmanList .zl-name {
+                display: flex;
+                align-items: baseline;
+                gap: 8px;
+                font-size: 13px;
+                color: #D8CFB2;
+            }
+
+            #zmanList .zl-heb {
+                font-family: 'Frank Ruhl Libre', serif;
+                font-weight: 600;
+                font-size: 14px;
+                color: var(--parchment);
+            }
+
+            #zmanList .zl-name span:not(.zl-heb) {
+                font-size: 11px;
+                color: #9C8C62;
+                font-style: italic;
+                font-family: 'Cormorant Garamond', serif;
+            }
+
+            #zmanList .zl-time {
+                font-variant-numeric: tabular-nums;
+                font-size: 13px;
+                color: #C9BD9C;
+                white-space: nowrap;
+                direction: ltr;
+                unicode-bidi: embed;
+            }
+
+            #zmanList li.now {
+                background: rgba(227,180,93,0.08);
+                margin: 0 -10px;
+                padding: 7px 10px;
+                border-radius: 6px;
+            }
+
+                #zmanList li.now .zl-heb,
+                #zmanList li.now .zl-time {
+                    color: var(--brass-bright);
+                    font-weight: 600;
+                }
+
+            #zmanList li.candle .zl-heb {
+                color: var(--maroon);
+            }
+
+                #zmanList li.candle .zl-heb::before {
+                    content: "✦ ";
+                    color: var(--maroon);
+                }
+
+        .dial-scroll {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: auto;
+            overflow-y: visible;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 22px;
+            padding: 4px 0 14px;
+            scrollbar-color: var(--brass) transparent;
+            scrollbar-width: thin;
+        }
+
+            .dial-scroll::-webkit-scrollbar {
+                height: 6px;
+            }
+
+            .dial-scroll::-webkit-scrollbar-thumb {
+                background: var(--brass);
+                border-radius: 4px;
+            }
+
+            .dial-scroll::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+        .scroll-hint {
+            display: none;
+            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 12px;
+            color: #9C8C62;
+            margin-top: 2px;
+            letter-spacing: .03em;
+        }
+
+        #stage {
+            position: relative;
+            width: 95vmax;
+            aspect-ratio: 1/1;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 560px) {
+			#stage {
+				width: 95vmax;
+			}
+
+            .scroll-hint {
+                display: block;
+            }
+        }
+
+        canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #labels {
+            position: absolute;
+            inset: 0;
+        }
+
+        .zman-label {
+            position: absolute;
+            transform: translate(-50%,-50%);
+            font-size: 10.5px;
+            line-height: 1.15;
+            text-align: center;
+            color: var(--parchment);
+            width: 76px;
+            pointer-events: none;
+        }
+
+            .zman-label .heb {
+                font-family: 'Frank Ruhl Libre', serif;
+                font-weight: 600;
+                font-size: 12.5px;
+                color: var(--parchment);
+                display: inline-block;
+            }
+
+            .zman-label .time {
+                font-variant-numeric: tabular-nums;
+                color: #C9BD9C;
+                display: block;
+                margin-top: 2px;
+                font-size: 10px;
+                letter-spacing: .02em;
+            }
+
+            .zman-label.now .heb {
+                color: var(--brass-bright);
+                animation: glowPulse 2.4s ease-in-out infinite;
+            }
+
+            .zman-label.now .time {
+                color: var(--brass-bright);
+                font-weight: 600;
+            }
+
+            .zman-label.candle .heb {
+                color: var(--maroon);
+            }
+
+                .zman-label.candle .heb::before {
+                    content: "✦ ";
+                    color: var(--maroon);
+                }
+
+        @keyframes glowPulse {
+            0%, 100% {
+                text-shadow: 0 0 3px rgba(227,180,93,0.35);
+            }
+
+            50% {
+                text-shadow: 0 0 9px rgba(227,180,93,0.9);
+            }
+        }
+
+        #center-readout {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+            text-align: center;
+            pointer-events: none;
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle, var(--parchment) 0%, var(--parchment-deep) 72%, var(--brass) 100%);
+            box-shadow: 0 0 0 2px var(--brass), 0 0 0 4px rgba(24,23,15,0.5), inset 0 0 12px rgba(124,45,45,0.18), 0 4px 12px rgba(0,0,0,0.45);
+        }
+
+            #center-readout .clock-time {
+                font-family: 'Frank Ruhl Libre', serif;
+                font-size: clamp(18px, 3.6vw, 23px);
+                font-weight: 700;
+                color: var(--ink);
+            }
+
+            #center-readout .clock-sub {
+                font-size: 8.5px;
+                letter-spacing: .14em;
+                text-transform: uppercase;
+                color: #6b5b3a;
+                margin-top: 2px;
+                max-width: 80px;
+            }
+
+        #status {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #C2B488;
+            text-align: center;
+            max-width: 480px;
+            line-height: 1.65;
+            background: linear-gradient(180deg, rgba(227,180,93,0.08), rgba(227,180,93,0.015));
+            border: 1px solid rgba(227,180,93,0.32);
+            border-radius: 10px;
+            padding: 14px 20px;
+        }
+
+            #status button {
+                background: none;
+                border: 1px solid var(--brass);
+                color: var(--brass-bright);
+                padding: 6px 14px;
+                border-radius: 20px;
+                font-family: 'Jost',sans-serif;
+                font-size: 11px;
+                letter-spacing: .05em;
+                cursor: pointer;
+                margin-top: 10px;
+            }
+
+                #status button:hover {
+                    background: rgba(227,180,93,0.12);
+                }
+
+                #status button:focus-visible {
+                    outline: 2px solid var(--brass-bright);
+                    outline-offset: 2px;
+                }
+
+        footer {
+            margin-top: 24px;
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 13px;
+            color: #9C8C62;
+            text-align: center;
+            max-width: 440px;
+            line-height: 1.7;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="frame-strip top"></div>
+
+    <header>
+        <p class="eyebrow">Today's Sun &amp; Hours</p>
+        <svg class="hexdivider" width="64" height="22" viewBox="0 0 64 22">
+            <polygon points="32,3 38.9,15 25.1,15" fill="none" stroke="#E3B45D" stroke-width="1" />
+            <polygon points="32,19 25.1,7 38.9,7" fill="none" stroke="#E3B45D" stroke-width="1" />
+            <line x1="0" y1="11" x2="20" y2="11" stroke="#B8893C" stroke-width="1" />
+            <line x1="44" y1="11" x2="64" y2="11" stroke="#B8893C" stroke-width="1" />
+        </svg>
+        <h1>Zmanim Astrolabe</h1>
+        <div class="heb-title" dir="rtl" lang="he">אִצְטַרְלָב הַזְּמַנִּים</div>
+        <div class="date-line" id="dateLine"></div>
+    </header>
+
+    <ul id="zmanList" dir="rtl"></ul>
+
+    <div class="dial-scroll" id="dialScroll">
+        <div id="stage">
+            <canvas id="dial"></canvas>
+            <div id="labels"></div>
+            <div id="center-readout">
+                <div class="clock-time" id="clockTime">--:--</div>
+                <div class="clock-sub" id="locLabel">locating…</div>
+            </div>
+        </div>
+    </div>
+    <p class="scroll-hint">↔ swipe to explore the full dial</p>
+
+    <div id="status">
+        Using your device location for accurate times.
+        <br>
+        <button id="locBtn">Use my location again</button>
+    </div>
+
+    <footer>
+        Times use the GRA (Vilna Gaon) and MGA (Magen Avraham) shaa zmanit methods ✦
+        Alot Hashachar, Misheyakir, and Tzeit approximated by solar depression angle ✦
+        For halachic rulings, consult a local rabbinic authority.
+    </footer>
+
+    <div class="frame-strip bottom"></div>
+
+    <script>
+        (function () {
+            "use strict";
+
+            // ---------- Sun position solver (generalized zenith, NOAA-style) ----------
+            function toRad(d) {return d * Math.PI / 180;}
+            function toDeg(r) {return r * 180 / Math.PI;}
+            function norm360(d) {d %= 360; return d < 0 ? d + 360 : d;}
+
+            function solarEvent(date, lat, lng, utcOffsetHours, zenith, isMorning) {
+                var start = new Date(date.getFullYear(), 0, 0);
+                var dayOfYear = Math.floor((date - start) / 86400000);
+                var lngHour = lng / 15;
+                var t = dayOfYear + ((isMorning ? 6 : 18) - lngHour) / 24;
+
+                var M = (0.9856 * t) - 3.289;
+                var L = norm360(M + 1.916 * Math.sin(toRad(M)) + 0.020 * Math.sin(toRad(2 * M)) + 282.634);
+
+                var RA = norm360(toDeg(Math.atan(0.91764 * Math.tan(toRad(L)))));
+                var Lq = Math.floor(L / 90) * 90;
+                var RAq = Math.floor(RA / 90) * 90;
+                RA = (RA + (Lq - RAq)) / 15;
+
+                var sinDec = 0.39782 * Math.sin(toRad(L));
+                var cosDec = Math.cos(Math.asin(sinDec));
+
+                var cosH = (Math.cos(toRad(zenith)) - sinDec * Math.sin(toRad(lat))) / (cosDec * Math.cos(toRad(lat)));
+                if (cosH > 1 || cosH < -1) return null;
+
+                var H = isMorning ? 360 - toDeg(Math.acos(cosH)) : toDeg(Math.acos(cosH));
+                H /= 15;
+
+                var T = H + RA - (0.06571 * t) - 6.622;
+                var UT = ((T - lngHour) % 24 + 24) % 24;
+                var local = ((UT + utcOffsetHours) % 24 + 24) % 24;
+
+                var hh = Math.floor(local);
+                var rem = (local - hh) * 60;
+                var mm = Math.floor(rem);
+                var ss = Math.round((rem - mm) * 60);
+                return new Date(date.getFullYear(), date.getMonth(), date.getDate(), hh, mm, ss);
+            }
+
+            function addMinutes(d, mins) {return new Date(d.getTime() + mins * 60000);}
+
+            function computeZmanim(date, lat, lng, utcOffset) {
+                var netz = solarEvent(date, lat, lng, utcOffset, 90.833, true);
+                var shkiah = solarEvent(date, lat, lng, utcOffset, 90.833, false);
+                var alot = solarEvent(date, lat, lng, utcOffset, 106.1, true);
+                var tzeit = solarEvent(date, lat, lng, utcOffset, 98.5, false);
+
+                if (!netz || !shkiah) {return null;}
+
+                var shaaZmanit = (shkiah - netz) / 12;
+                var shaaZmanitMga = (tzeit - alot) / 12;
+
+                var chatzot = new Date(netz.getTime() + 6 * shaaZmanit);
+                var chatzotLayla = addMinutes(chatzot, 12 * 60);
+
+                return [
+                    {key: 'chatzotLayla', name: 'Midnight', heb: 'חֲצוֹת הַלַּיְלָה', time: chatzotLayla},
+                    {key: 'alot', name: 'Dawn', heb: 'עֲלוֹת הַשַּׁחַר', time: alot},
+                    {key: 'misheyakir', name: 'Misheyakir', heb: 'מִשֶּׁיַּכִּיר', time: solarEvent(date, lat, lng, utcOffset, 101.0, true)},
+                    {key: 'netz', name: 'Sunrise', heb: 'הָנֵץ הַחַמָּה', time: netz},
+                    {key: 'shemaMga', name: 'Latest Shema (MGA)', heb: 'ק״ש (מ״א)', time: new Date(alot.getTime() + 3 * shaaZmanitMga)},
+                    {key: 'shema', name: 'Latest Shema', heb: 'סוֹף זְמַן ק״ש', time: new Date(netz.getTime() + 3 * shaaZmanit)},
+                    {key: 'tefilahMga', name: 'Latest Amidah (MGA)', heb: 'תְּפִלָּה (מ״א)', time: new Date(alot.getTime() + 4 * shaaZmanitMga)},
+                    {key: 'tefilah', name: 'Latest Amidah', heb: 'סוֹף זְמַן תְּפִלָּה', time: new Date(netz.getTime() + 4 * shaaZmanit)},
+                    {key: 'chatzot', name: 'Midday', heb: 'חֲצוֹת הַיּוֹם', time: chatzot},
+                    {key: 'mga', name: 'Early Mincha', heb: 'מִנְחָה גְּדוֹלָה', time: new Date(netz.getTime() + 6.5 * shaaZmanit)},
+                    {key: 'mka', name: 'Mincha Ketana', heb: 'מִנְחָה קְטַנָּה', time: new Date(netz.getTime() + 9.5 * shaaZmanit)},
+                    {key: 'plagMga', name: 'Plag HaMincha (MGA)', heb: 'פְּלַג (מ״א)', time: new Date(alot.getTime() + 10.75 * shaaZmanitMga)},
+                    {key: 'plag', name: 'Plag HaMincha', heb: 'פְּלַג הַמִּנְחָה', time: new Date(netz.getTime() + 10.75 * shaaZmanit)},
+                    {key: 'candleLighting', name: 'Candle Lighting', heb: 'הַדְלָקַת נֵרוֹת', time: addMinutes(shkiah, -18)},
+                    {key: 'shkiah', name: 'Sunset', heb: 'שְׁקִיעַת הַחַמָּה', time: shkiah},
+                    {key: 'tzeit', name: 'Nightfall', heb: 'צֵאת הַכּוֹכָבִים', time: tzeit},
+                    {key: 'tzeitRT', name: 'Nightfall (R״T)', heb: 'צֵאת ר״ת', time: addMinutes(shkiah, 72)}
+                ];
+            }
+
+            // ---------- Drawing ----------
+            var stage = document.getElementById('stage');
+            var canvas = document.getElementById('dial');
+            var labelsLayer = document.getElementById('labels');
+            var ctx = canvas.getContext('2d');
+            var dpr = window.devicePixelRatio || 1;
+
+            var current = {zmanim: null, lat: 31.7683, lng: 35.2137, label: 'Jerusalem (default)'};
+
+            function angleForTime(d) {
+                var hrs = d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+                return (hrs / 24) * Math.PI * 2 - Math.PI / 2;
+            }
+
+            function resizeCanvas() {
+                var size = stage.clientWidth;
+                canvas.width = size * dpr;
+                canvas.height = size * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                draw();
+            }
+
+            function fmtTime(d) {
+                if (!d) return '--:--';
+                var h = d.getHours(), m = d.getMinutes();
+                var ampm = h < 12 ? 'AM' : 'PM';
+                var h12 = h % 12; if (h12 === 0) h12 = 12;
+                return h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+            }
+
+            function drawZmanRays(cx, cy, R) {
+                if (!current.zmanim) return;
+                var now = new Date();
+                ctx.save();
+                ctx.translate(cx, cy);
+                current.zmanim.forEach(function (z) {
+                    if (!z.time) return;
+                    var a = angleForTime(z.time);
+                    var isNow = Math.abs(now - z.time) < 60000;
+                    var r1 = R * 0.96, r2 = R * 1.30;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+                    ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+                    ctx.strokeStyle = isNow ? 'rgba(227,180,93,0.95)' : 'rgba(184,137,60,0.32)';
+                    ctx.lineWidth = isNow ? 1.6 : 0.6;
+                    ctx.stroke();
+
+                    var tx = Math.cos(a) * r2, ty = Math.sin(a) * r2;
+                    ctx.save();
+                    ctx.translate(tx, ty);
+                    ctx.rotate(a + Math.PI / 4);
+                    ctx.fillStyle = isNow ? '#E3B45D' : 'rgba(184,137,60,0.55)';
+                    var s = isNow ? 4.5 : 2.6;
+                    ctx.fillRect(-s / 2, -s / 2, s, s);
+                    ctx.restore();
+                });
+                ctx.restore();
+            }
+
+            function drawHexHub(cx, cy) {
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.beginPath();
+                ctx.moveTo(0, -7);
+                ctx.lineTo(6.06, 3.5);
+                ctx.lineTo(-6.06, 3.5);
+                ctx.closePath();
+                ctx.moveTo(0, 7);
+                ctx.lineTo(-6.06, -3.5);
+                ctx.lineTo(6.06, -3.5);
+                ctx.closePath();
+                ctx.fillStyle = '#F3E8CC';
+                ctx.fill('evenodd');
+                ctx.strokeStyle = '#7C2D2D';
+                ctx.lineWidth = 1.3;
+                ctx.stroke();
+                ctx.restore();
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#18170F';
+                ctx.fill();
+            }
+
+            function draw() {
+                var size = stage.clientWidth;
+                var cx = size / 2, cy = size / 2;
+                var R = size * 0.30;
+                ctx.clearRect(0, 0, size, size);
+
+                var ringGrad = ctx.createRadialGradient(cx, cy, R * 0.86, cx, cy, R * 1.04);
+                ringGrad.addColorStop(0, '#8a651f');
+                ringGrad.addColorStop(0.5, '#E3B45D');
+                ringGrad.addColorStop(1, '#6b4c16');
+                ctx.beginPath();
+                ctx.arc(cx, cy, R * 1.02, 0, Math.PI * 2);
+                ctx.fillStyle = ringGrad;
+                ctx.fill();
+
+                var faceGrad = ctx.createRadialGradient(cx, cy * 0.85, R * 0.1, cx, cy, R);
+                faceGrad.addColorStop(0, '#F6ECD4');
+                faceGrad.addColorStop(1, '#E2CFA0');
+                ctx.beginPath();
+                ctx.arc(cx, cy, R * 0.95, 0, Math.PI * 2);
+                ctx.fillStyle = faceGrad;
+                ctx.fill();
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = '#B8893C';
+                ctx.stroke();
+
+                if (current.zmanim) {
+                    var netz = current.zmanim.find(function (z) {return z.key === 'netz';}).time;
+                    var shkiah = current.zmanim.find(function (z) {return z.key === 'shkiah';}).time;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, R * 0.95, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.arc(cx, cy, R * 0.95, angleForTime(netz), angleForTime(shkiah), false);
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(227,180,93,0.16)';
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // engraved guilloche ring just inside the brass edge
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.strokeStyle = 'rgba(124,45,45,0.35)';
+                ctx.lineWidth = 0.8;
+                ctx.beginPath();
+                ctx.arc(0, 0, R * 0.93, 0, Math.PI * 2);
+                ctx.stroke();
+                for (var d = 0; d < 24; d++) {
+                    var ad = (d / 24) * Math.PI * 2 - Math.PI / 2;
+                    ctx.beginPath();
+                    ctx.arc(Math.cos(ad) * R * 0.93, Math.sin(ad) * R * 0.93, 1, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(184,137,60,0.55)';
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                // hour ticks 0-23
+                ctx.save();
+                ctx.translate(cx, cy);
+                for (var h = 0; h < 24; h++) {
+                    var a = (h / 24) * Math.PI * 2 - Math.PI / 2;
+                    var isMajor = (h % 6 === 0);
+                    var r1 = R * 0.95, r2 = isMajor ? R * 0.84 : R * 0.89;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1);
+                    ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+                    ctx.strokeStyle = isMajor ? '#7C2D2D' : '#9c8253';
+                    ctx.lineWidth = isMajor ? 2 : 1;
+                    ctx.stroke();
+
+                    if (isMajor) {
+                        var tx = Math.cos(a) * R * 0.74, ty = Math.sin(a) * R * 0.74;
+                        ctx.fillStyle = '#7C2D2D';
+                        ctx.font = '600 13px Frank Ruhl Libre, serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(h, tx, ty);
+                    }
+                }
+                ctx.restore();
+
+                drawZmanRays(cx, cy, R);
+
+                // current-time hand
+                var now = new Date();
+                var na = angleForTime(now);
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(na + Math.PI / 2);
+                ctx.beginPath();
+                ctx.moveTo(-4, 8);
+                ctx.lineTo(4, 8);
+                ctx.lineTo(1.5, -R * 0.7);
+                ctx.lineTo(-1.5, -R * 0.7);
+                ctx.closePath();
+                ctx.fillStyle = '#7C2D2D';
+                ctx.fill();
+                ctx.restore();
+
+                drawHexHub(cx, cy);
+
+                placeLabels(cx, cy, R, size);
+                renderZmanList();
+            }
+
+            function placeLabels(cx, cy, R, size) {
+                labelsLayer.innerHTML = '';
+                if (!current.zmanim) return;
+                var now = new Date();
+
+                current.zmanim.forEach(function (z, i) {
+                    var a = angleForTime(z.time);
+                    var lr = R * 1.34;
+                    var x = cx + Math.cos(a) * lr;
+                    var y = cy + Math.sin(a) * lr;
+                    var pct = (x / size * 100), pcy = (y / size * 100);
+
+                    var div = document.createElement('div');
+                    div.className = 'zman-label';
+                    if (Math.abs(now - z.time) < 60000) div.classList.add('now');
+                    if (z.key === 'candleLighting') div.classList.add('candle');
+                    div.style.left = pct + '%';
+                    div.style.top = pcy + '%';
+                    div.innerHTML =
+                        '<span class="heb" dir="rtl" lang="he">' + z.heb + '</span>' +
+                        '<span class="time">' + fmtTime(z.time) + '</span>';
+                    labelsLayer.appendChild(div);
+                });
+            }
+
+            function renderZmanList() {
+                var listEl = document.getElementById('zmanList');
+                listEl.innerHTML = '';
+                if (!current.zmanim) return;
+                var now = new Date();
+                current.zmanim.forEach(function (z) {
+                    var li = document.createElement('li');
+                    if (Math.abs(now - z.time) < 60000) li.classList.add('now');
+                    if (z.key === 'candleLighting') li.classList.add('candle');
+                    li.innerHTML =
+                        '<span class="zl-name"><span class="zl-heb" dir="rtl" lang="he">' + z.heb + '</span>' +
+                        '<span>' + z.name + '</span></span>' +
+                        '<span class="zl-time">' + fmtTime(z.time) + '</span>';
+                    listEl.appendChild(li);
+                });
+            }
+
+            function tick() {
+                var d = new Date();
+                document.getElementById('clockTime').textContent =
+                    d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+                draw();
+            }
+
+            function recompute() {
+                var now = new Date();
+                var utcOffset = -now.getTimezoneOffset() / 60;
+                current.zmanim = computeZmanim(now, current.lat, current.lng, utcOffset);
+                document.getElementById('locLabel').textContent = current.label;
+                document.getElementById('dateLine').textContent =
+                    now.toLocaleDateString([], {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+                draw();
+            }
+
+            function locate() {
+                var statusBtn = document.getElementById('locBtn');
+                if (!navigator.geolocation) {
+                    current.label = 'Jerusalem (no geolocation)';
+                    recompute();
+                    return;
+                }
+                statusBtn.textContent = 'Locating…';
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    current.lat = pos.coords.latitude;
+                    current.lng = pos.coords.longitude;
+                    current.label = 'Your location · ' + current.lat.toFixed(2) + ', ' + current.lng.toFixed(2);
+                    statusBtn.textContent = 'Use my location again';
+                    recompute();
+                }, function (err) {
+                    current.label = 'Jerusalem (location unavailable)';
+                    statusBtn.textContent = 'Try location again';
+                    recompute();
+                }, {enableHighAccuracy: true, timeout: 8000});
+            }
+
+            function centerDialScroll() {
+                var wrap = document.getElementById('dialScroll');
+                if (!wrap) return;
+                wrap.scrollLeft = (wrap.scrollWidth - wrap.clientWidth) / 2;
+            }
+
+            document.getElementById('locBtn').addEventListener('click', locate);
+            window.addEventListener('resize', resizeCanvas);
+            window.addEventListener('resize', centerDialScroll);
+
+            recompute();
+            resizeCanvas();
+            centerDialScroll();
+            locate();
+            setInterval(tick, 1000);
+        })();
+    </script>
+
+</body>
+</html>
