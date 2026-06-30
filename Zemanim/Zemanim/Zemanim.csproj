@@ -48,6 +48,21 @@
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-android|AnyCPU'">
+      <AndroidPackageFormat>apk</AndroidPackageFormat>
+      <!-- Enable signing for Release builds. Replace passwords with secure values or use environment variables in CI. -->
+      <AndroidKeyStore>true</AndroidKeyStore>
+      <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)signing\my-release-key.jks</AndroidSigningKeyStore>
+      <AndroidSigningStorePass>ChangeThisStorePassword</AndroidSigningStorePass>
+      <AndroidSigningKeyAlias>mykey</AndroidSigningKeyAlias>
+      <!-- Use the store password for the key password to avoid PKCS12 key password mismatch issues -->
+      <AndroidSigningKeyPass>$(AndroidSigningStorePass)</AndroidSigningKeyPass>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net10.0-android|AnyCPU'">
+      <AndroidKeyStore>False</AndroidKeyStore>
+    </PropertyGroup>
+
     <ItemGroup>
         <!-- App Icon -->
         <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
