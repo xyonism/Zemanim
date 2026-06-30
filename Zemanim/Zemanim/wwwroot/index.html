@@ -7,16 +7,16 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Frank+Ruhl+Libre:wght@500;700;800&family=Jost:wght@300;400;500&display=swap');
 
-        :root {
-            --parchment: #F3E8CC;
-            --parchment-deep: #E3CE9F;
-            --ink: #18170F;
-            --brass: #B8893C;
-            --brass-bright: #E3B45D;
-            --maroon: #7C2D2D;
-            --sapphire: #28415F;
-            --sage: #5F6F4F;
-        }
+		:root {
+			--parchment: #F3E8CC;
+			--parchment-deep: #E3CE9F;
+			--ink: #18170F;
+			--brass: #B8893C;
+			--brass-bright: #E3B45D;
+			--maroon: #7C2D2D;
+			--sapphire: #28415F;
+			--sage: #5F6F4F;
+		}
 
         * {
             box-sizing: border-box;
@@ -102,13 +102,18 @@
             letter-spacing: 0;
         }
 
-        .date-line {
-            font-family: 'Cormorant Garamond', serif;
-            font-style: italic;
-            font-size: 18px;
-            color: #C9BD9C;
-            margin-top: 10px;
-        }
+		.date-line {
+			font-family: 'Frank Ruhl Libre', serif;
+
+
+			font-size: 18px;
+			color: #C9BD9C;
+			margin-top: 10px;
+		}
+
+	#zmanList * {
+		font-size: 100% !important;
+	}
 
         #zmanList {
             list-style: none;
@@ -138,19 +143,16 @@
                 display: flex;
                 align-items: baseline;
                 gap: 8px;
-                font-size: 13px;
                 color: #D8CFB2;
             }
 
             #zmanList .zl-heb {
                 font-family: 'Frank Ruhl Libre', serif;
                 font-weight: 600;
-                font-size: 14px;
                 color: var(--parchment);
             }
 
             #zmanList .zl-name span:not(.zl-heb) {
-                font-size: 11px;
                 color: #9C8C62;
                 font-style: italic;
                 font-family: 'Cormorant Garamond', serif;
@@ -158,7 +160,6 @@
 
             #zmanList .zl-time {
                 font-variant-numeric: tabular-nums;
-                font-size: 13px;
                 color: #C9BD9C;
                 white-space: nowrap;
                 direction: ltr;
@@ -395,6 +396,7 @@
                 animation: none !important;
             }
         }
+
     </style>
 </head>
 <body>
@@ -412,6 +414,7 @@
         <h1>Zmanim Astrolabe</h1>
         <div class="heb-title" dir="rtl" lang="he">אִצְטַרְלָב הַזְּמַנִּים</div>
         <div class="date-line" id="dateLine"></div>
+		<div class="date-line heb-date" id="hebDateLine" dir="rtl" lang="he"></div>
     </header>
 
     <ul id="zmanList" dir="rtl"></ul>
@@ -521,6 +524,50 @@
                     {key: 'tzeitRT', name: 'Nightfall (R״T)', heb: 'צֵאת ר״ת', time: addMinutes(shkiah, 72)}
                 ];
             }
+
+			// Convert integer to Hebrew gematria letters (common rabbinic style)
+			function numToHeb(n) {
+				if (typeof n !== 'number' || n <= 0) return '' + n;
+				// special handling for 15 and 16
+				if (n === 15) return 'ט״ו';
+				if (n === 16) return 'ט״ז';
+
+				var parts = [];
+				var hundreds = [400,300,200,100];
+				var hundredsMap = {400:'ת',300:'ש',200:'ר',100:'ק'};
+				for (var i=0;i<hundreds.length;i++){
+					while(n >= hundreds[i]){ parts.push(hundredsMap[hundreds[i]]); n -= hundreds[i]; }
+				}
+
+				var tensMap = {90:'צ',80:'פ',70:'ע',60:'ס',50:'נ',40:'מ',30:'ל',20:'כ',10:'י'};
+				var tensVals = [90,80,70,60,50,40,30,20,10];
+				for (var j=0;j<tensVals.length;j++){
+					var v = tensVals[j];
+					while(n >= v){ parts.push(tensMap[v]); n -= v; }
+				}
+
+				var unitsMap = {9:'ט',8:'ח',7:'ז',6:'ו',5:'ה',4:'ד',3:'ג',2:'ב',1:'א'};
+				for (var u=9; u>=1; u--) {
+					if (n === u) { parts.push(unitsMap[u]); n = 0; break; }
+				}
+
+				if (parts.length === 0) return '';
+				// join parts; insert gershayim (״) before last char for multi-letter, geresh (׳) after single-letter
+				var s = parts.join('');
+				if (s.length === 1) return s + '׳';
+				// place gershayim before last character
+				return s.slice(0, -1) + '״' + s.slice(-1);
+			}
+
+			// Replace all Western Arabic numerals in a string with Hebrew gematria
+			function replaceNumbersWithHeb(str) {
+				if (!str || typeof str !== 'string') return str;
+				return str.replace(/\d+/g, function (m) {
+					var val = parseInt(m, 10);
+					if (isNaN(val)) return m;
+					return numToHeb(val);
+				});
+			}
 
             // ---------- Drawing ----------
             var stage = document.getElementById('stage');
@@ -768,8 +815,21 @@
                 var utcOffset = -now.getTimezoneOffset() / 60;
                 current.zmanim = computeZmanim(now, current.lat, current.lng, utcOffset);
                 document.getElementById('locLabel').textContent = current.label;
-                document.getElementById('dateLine').textContent =
-                    now.toLocaleDateString([], {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+			// Gregorian date (normal Western numerals)
+			document.getElementById('dateLine').textContent =
+				now.toLocaleDateString([], {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+				// Hebrew calendar date using gematria for numbers (Intl for month/weekday)
+				try {
+					var dayNum = parseInt(new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {day: 'numeric'}).format(now), 10);
+					var monthName = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {month: 'long'}).format(now);
+					var yearNum = parseInt(new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {year: 'numeric'}).format(now), 10);
+					var shortYear = yearNum >= 5000 ? yearNum - 5000 : yearNum;
+					var dayHeb = numToHeb(dayNum);
+					var yearHeb = numToHeb(shortYear);
+					document.getElementById('hebDateLine').textContent = dayHeb + ' ' + monthName + ' ' + yearHeb;
+				} catch (e) {
+					document.getElementById('hebDateLine').textContent = '';
+				}
                 draw();
             }
 
