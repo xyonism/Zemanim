@@ -28,5 +28,8 @@
     </array>
     <key>XSAppIconAssets</key>
     <string>Assets.xcassets/appicon.appiconset</string>
+    <!-- Permission message required for navigator.geolocation in WKWebView -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>This app needs access to your location to show your position.</string>
 </dict>
 </plist>
