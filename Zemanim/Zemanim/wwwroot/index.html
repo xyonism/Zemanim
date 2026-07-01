@@ -18,6 +18,58 @@
 			--sage: #5F6F4F;
 		}
 
+		/* Geolocation search (OpenStreetMap / Nominatim) */
+		.geo-search {
+			margin: 18px 0 8px;
+			display: flex;
+			gap: 8px;
+			align-items: center;
+			width: min(94vw, 420px);
+		}
+
+		.geo-search input {
+			flex: 1;
+			padding: 8px 10px;
+			border-radius: 8px;
+			border: 1px solid rgba(227,180,93,0.2);
+			background: rgba(255,255,255,0.02);
+			color: var(--parchment);
+			outline: none;
+		}
+
+		.geo-search button {
+			padding: 8px 12px;
+			border-radius: 8px;
+			border: none;
+			background: var(--brass);
+			color: var(--ink);
+			font-weight: 600;
+			cursor: pointer;
+		}
+
+		#geoResults {
+			margin: 8px 0 0;
+			padding: 8px;
+			width: min(94vw, 420px);
+			list-style: none;
+			border-radius: 8px;
+			background: rgba(255,255,255,0.02);
+			border: 1px solid rgba(227,180,93,0.12);
+			max-height: 180px;
+			overflow: auto;
+		}
+
+		#geoResults li {
+			padding: 6px 8px;
+			border-bottom: 1px solid rgba(227,180,93,0.06);
+			cursor: pointer;
+			color: var(--parchment);
+			font-size: 14px;
+		}
+
+		#geoResults li:last-child { border-bottom: none; }
+
+
         * {
             box-sizing: border-box;
         }
@@ -431,11 +483,19 @@
     </div>
     <p class="scroll-hint">↔ swipe to explore the full dial</p>
 
-    <div id="status">
-        Using your device location for accurate times.
-        <br>
-        <button id="locBtn">Use my location again</button>
-    </div>
+	<div id="status">
+		<div class="geo-search">
+			<input id="geoSearchInput" type="search" placeholder="Search location (address, city, etc.)" aria-label="Search location" />
+			<button id="geoSearchBtn">Search</button>
+		</div>
+		<ul id="geoResults" role="listbox" aria-label="Search results"></ul>
+
+		<div class="status-text">
+			Using your device location for accurate times.
+			<br>
+			<button id="locBtn">Use my location again</button>
+		</div>
+	</div>
 
     <footer>
         Times use the GRA (Vilna Gaon) and MGA (Magen Avraham) shaa zmanit methods ✦
@@ -853,6 +913,59 @@
                     recompute();
                 }, {enableHighAccuracy: true, timeout: 8000});
             }
+
+			// OpenStreetMap / Nominatim geocoding
+			async function searchLocation(query) {
+				var out = document.getElementById('geoResults');
+				out.innerHTML = '<li>Searching…</li>';
+				try {
+					var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&q=' + encodeURIComponent(query);
+					var res = await fetch(url, {headers: { 'Accept': 'application/json' }});
+					if (!res.ok) throw new Error('Geocoding failed');
+					var data = await res.json();
+					renderSearchResults(data || []);
+				} catch (e) {
+					out.innerHTML = '<li>Search failed</li>';
+				}
+			}
+
+			function renderSearchResults(items) {
+				var out = document.getElementById('geoResults');
+				out.innerHTML = '';
+				if (!items || items.length === 0) {
+					out.innerHTML = '<li>No results</li>';
+					return;
+				}
+				items.forEach(function (it) {
+					var li = document.createElement('li');
+					li.textContent = it.display_name + ' (' + parseFloat(it.lat).toFixed(4) + ', ' + parseFloat(it.lon).toFixed(4) + ')';
+					li.tabIndex = 0;
+					li.addEventListener('click', function () { selectSearchResult(it); });
+					li.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') selectSearchResult(it); });
+					out.appendChild(li);
+				});
+			}
+
+			function selectSearchResult(item) {
+				current.lat = parseFloat(item.lat);
+				current.lng = parseFloat(item.lon);
+				current.label = item.display_name;
+				recompute();
+				// clear results
+				document.getElementById('geoResults').innerHTML = '';
+				// scroll dial center
+				centerDialScroll();
+			}
+
+			document.getElementById('geoSearchBtn').addEventListener('click', function () {
+				var q = document.getElementById('geoSearchInput').value.trim();
+				if (!q) return;
+				searchLocation(q);
+			});
+
+			document.getElementById('geoSearchInput').addEventListener('keydown', function (e) {
+				if (e.key === 'Enter') { e.preventDefault(); document.getElementById('geoSearchBtn').click(); }
+			});
 
             function centerDialScroll() {
                 var wrap = document.getElementById('dialScroll');
