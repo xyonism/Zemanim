@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48" fill="#FFFFFF">
-	<path d="M592-302 450-444v-196h60v171l124 124-42 43ZM450-730v-90h60v90h-60Zm280 280v-60h90v60h-90ZM450-140v-90h60v90h-60ZM140-450v-60h90v60h-90ZM480.27-80q-82.74 0-155.5-31.5Q252-143 197.5-197.5t-86-127.34Q80-397.68 80-480.5t31.5-155.66Q143-709 197.5-763t127.34-85.5Q397.68-880 480.5-880t155.66 31.5Q709-817 763-763t85.5 127Q880-563 880-480.27q0 82.74-31.5 155.5Q817-252 763-197.68q-54 54.31-127 86Q563-80 480.27-80Zm.23-60Q622-140 721-239.5t99-241Q820-622 721.19-721T480-820q-141 0-240.5 98.81T140-480q0 141 99.5 240.5t241 99.5Zm-.5-340Z"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+  <!-- Clock circle -->
+  <circle cx="24" cy="24" r="12" fill="none" stroke="#FFFFFF" stroke-width="2" />
+
+  <!-- Star of David (two overlapping triangles) -->
+  <g fill="#FFFFFF" stroke="none" transform="translate(0,0)">
+	<!-- Equilateral triangles centered at (24,24) -->
+	<polygon points="24,14 32.660254,29 15.339746,29" />
+	<polygon points="24,34 15.339746,19 32.660254,19" />
+  </g>
+
+  <!-- Clock hands -->
+  <g stroke="#0D6EFD" stroke-width="2" stroke-linecap="round" fill="none">
+	<!-- Minute hand (white background shows circle, use blue hands for contrast) -->
+	<line x1="24" y1="24" x2="24" y2="14" />
+	<!-- Hour hand -->
+	<line x1="24" y1="24" x2="30" y2="24" />
+  </g>
+
+  <!-- Center dot (blue) -->
+  <circle cx="24" cy="24" r="1.5" fill="#0D6EFD" />
 </svg>
